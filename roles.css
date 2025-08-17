@@ -1,0 +1,102 @@
+
+* {
+  box-sizing: border-box; 
+}
+
+body {
+  margin: 0; 
+  font-family: 'Poppins', sans-serif; 
+  background-color: #034da1; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  height: 100vh; 
+}
+
+.content-wrapper {
+  width: 60%; 
+  height: 550px; 
+  background-color: white; 
+  border-radius: 20px; 
+  box-shadow: 0 8px 24px rgba(54, 32, 32, 0.751); 
+  overflow: hidden; 
+}
+
+.content-box {
+  display: flex; 
+  flex-direction: column; 
+  width: 100%; 
+  height: 100%; 
+}
+
+.logo-mmu {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 30px 0 20px 0;
+}
+
+.logo {
+  max-width: 250px; 
+  height: auto; 
+}
+
+h1 {
+  text-align: center; 
+  margin: 10px 0 30px 0; 
+  color: #333; 
+  font-size: 40px;
+}
+
+/* Grid for all the role cards */
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 50px;
+  max-width: 650px;
+  margin: 0 auto;
+  padding-bottom: 37px;
+}
+
+/* Style for each role card */
+.role-card {
+  display: grid;
+  grid-template-rows: auto auto;
+  align-items: center;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #fff;
+  font-family: 'Poppins', sans-serif;
+  height: 250px;
+}
+
+.role-card img {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.btn {
+  margin-top: 10px;
+  padding: 10px;
+  background: #ec1c24;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  text-decoration: none;
+  font-family: 'Poppins', sans-serif;
+}
+
+.btn:hover {
+  background: #ff595f;
+}
+
+.version {
+  text-align: center; 
+  font-size: 10px; 
+  color: #888; 
+}
