@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Passenger's Profile</title>
+  <link rel="stylesheet" href="styles/passenger-profile.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="passenger.html">Dashboard</a></li>
+      <li><a href="passenger-booking-details.html">My Booking</a></li>
+      <li><a href="passenger-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Blue wrapper (Profile Info) -->
+  <div class="form-wrapper">
+    <h2>Profile</h2>
+    <div class="profile-driver">
+      <div class="profile-driver-left">
+        <p>
+          <label class="label">Name</label>
+          <input type="text" class="value" id="nameInput" placeholder="Enter your name">
+        </p>
+        <p>
+          <label class="label">Student ID</label>
+          <input type="text" class="value" id="studentIdInput" placeholder="Enter your Student ID">
+        </p>
+        <p>
+          <label class="label">Phone No</label>
+          <input type="text" class="value" id="phoneInput" placeholder="Enter your phone number">
+        </p>
+        <p>
+          <label class="label">Faculty</label>
+          <input type="text" class="value" id="facultyInput" placeholder="Enter your faculty">
+        </p>
+      </div>
+
+      <!-- Single button -->
+      <div class="profile-actions">
+        <button type="button" id="updateBtn" class="update-btn">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+      authDomain: "mmu---buddyride.firebaseapp.com",
+      projectId: "mmu---buddyride",
+      storageBucket: "mmu---buddyride.appspot.com",
+      messagingSenderId: "658653638951",
+      appId: "1:658653638951:web:d61409e97ff7543e813902",
+      measurementId: "G-LCS2ECBL00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const nameInput = document.getElementById("nameInput");
+    const studentIdInput = document.getElementById("studentIdInput");
+    const phoneInput = document.getElementById("phoneInput");
+    const facultyInput = document.getElementById("facultyInput");
+    const updateBtn = document.getElementById("updateBtn");
+
+    let currentUser = null;
+
+    // Load profile when user is logged in
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("Please log in first!");
+        window.location.href = "index.html";
+        return;
+      }
+      currentUser = user;
+
+      try {
+        const profileDoc = await getDoc(doc(db, "users", user.uid));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          nameInput.value = data.name || "";
+          studentIdInput.value = data.studentId || "";
+          phoneInput.value = data.phone || "";
+          facultyInput.value = data.faculty || "";
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      }
+    });
+
+    // Update profile
+    updateBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      try {
+        await setDoc(doc(db, "users", currentUser.uid), {
+          name: nameInput.value.trim(),
+          studentId: studentIdInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          faculty: facultyInput.value.trim()
+        }, { merge: true }); // merge:true ensures only updated fields are saved
+
+        alert("Profile updated successfully!");
+      } catch (err) {
+        console.error("Error updating profile:", err);
+        alert("Failed to update profile. Check console for details.");
+      }
+    });
+  </script>
+</body>
+</html>

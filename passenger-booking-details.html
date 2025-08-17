@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Bookings - Passenger</title>
+  <link rel="stylesheet" href="styles/passenger-booking-details.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="passenger.html">Dashboard</a></li>
+      <li><a href="passenger-booking-details.html">My Booking</a></li>
+      <li><a href="passenger-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Bookings container -->
+  <div id="bookingsContainer">
+    <h3>My Bookings</h3>
+    <!-- Booking boxes will be appended here -->
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+      authDomain: "mmu---buddyride.firebaseapp.com",
+      projectId: "mmu---buddyride",
+      storageBucket: "mmu---buddyride.appspot.com",
+      messagingSenderId: "658653638951",
+      appId: "1:658653638951:web:d61409e97ff7543e813902",
+      measurementId: "G-LCS2ECBL00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const bookingsContainer = document.getElementById("bookingsContainer");
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        alert("Please log in first!");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const bookingsRef = collection(db, "bookings");
+      const q = query(bookingsRef, where("userId", "==", user.uid), orderBy("createdAt", "desc"));
+
+      onSnapshot(q, (snapshot) => {
+        // Remove old booking boxes
+        const oldBoxes = bookingsContainer.querySelectorAll(".form-wrapper");
+        oldBoxes.forEach(box => box.remove());
+
+        if (snapshot.empty) {
+          const msg = document.createElement("p");
+          msg.innerText = "You have no bookings yet.";
+          bookingsContainer.appendChild(msg);
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+
+          const bookingBox = document.createElement("div");
+          bookingBox.className = "form-wrapper";
+          bookingBox.innerHTML = `
+            <h2>Booking Information: #${doc.id}</h2>
+            <div class="booking-details">
+              <div class="booking-details-left">
+                <p><span class="label">Destination</span> <span class="value">: ${data.destination || "-"}</span></p>
+                <p><span class="label">Date</span> <span class="value">: ${data.date || "-"}</span></p>
+                <p><span class="label">Time</span> <span class="value">: ${data.time || "-"}</span></p>
+                <p><span class="label">Assembly Place</span> <span class="value">: ${data.assemblyPlace || "-"}</span></p>
+              </div>
+              <div class="booking-details-right">
+                <p><span class="label">ETA</span> <span class="value">: ${data.eta || "-"}</span></p>
+                <p><span class="label">Mood</span> <span class="value">: ${data.mood || "-"}</span></p>
+                <p><span class="label">Gender</span> <span class="value">: ${data.gender || "Mixed"}</span></p>
+                <p><span class="label">Car Details</span> <span class="value">: ${data.carDetails || "-"}</span></p>
+              </div>
+            </div>
+          `;
+
+          bookingsContainer.appendChild(bookingBox);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Homepage - Passenger</title>
+  <link rel="stylesheet" href="styles/passenger.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="passenger.html">Dashboard</a></li>
+      <li><a href="passenger-booking-details.html">My Booking</a></li>
+      <li><a href="passenger-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="search-ride">
+    <a href="find-ride.html" class="find-btn">+ FIND A RIDE</a>
+  </div>
+
+  <div class="dashboard-title">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Blue wrapper -->
+  <div class="stats-wrapper">
+    <!-- Total Booking -->
+    <div class="stat-item">
+        <span>Total Booking:</span>
+        <div class="stat-box" id="totalBookings">0</div>
+        <div class="stat-list">
+            <ul id="totalBookingList"></ul>
+        </div>
+    </div>
+
+    <!-- Upcoming Rides -->
+    <div class="stat-item">
+        <span>Upcoming Booking:</span>
+        <div class="stat-box" id="upcomingBookings">0</div>
+        <div class="stat-list">
+            <ul id="upcomingBookingList"></ul>
+        </div>
+    </div>
+  </div>
+
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+  authDomain: "mmu---buddyride.firebaseapp.com",
+  projectId: "mmu---buddyride",
+  storageBucket: "mmu---buddyride.appspot.com",
+  messagingSenderId: "658653638951",
+  appId: "1:658653638951:web:d61409e97ff7543e813902",
+  measurementId: "G-LCS2ECBL00"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const totalBookingsEl = document.getElementById("totalBookings");
+const totalBookingListEl = document.getElementById("totalBookingList");
+const upcomingBookingsEl = document.getElementById("upcomingBookings");
+const upcomingBookingListEl = document.getElementById("upcomingBookingList");
+
+// Listen for auth state
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    alert("Please log in first!");
+    window.location.href = "index.html";
+    return;
+  }
+
+  console.log("Logged in user:", user.uid);
+
+  const bookingsRef = collection(db, "bookings");
+  const q = query(bookingsRef, where("userId", "==", user.uid), orderBy("date", "asc"));
+
+  // Real-time listener
+  onSnapshot(q, (snapshot) => {
+    const allBookings = [];
+    const upcomingBookings = [];
+    const now = new Date();
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+
+      // Parse date safely
+      let bookingDate = new Date(data.date + " " + (data.time || "00:00"));
+      if (isNaN(bookingDate)) {
+        console.warn("Invalid date for booking:", data);
+        bookingDate = now; // fallback so it doesn't break the filter
+      }
+
+      allBookings.push({ id: doc.id, date: data.date, time: data.time });
+
+      if (bookingDate >= now) {
+        upcomingBookings.push({ id: doc.id, date: data.date, time: data.time });
+      }
+    });
+
+    console.log("All bookings:", allBookings);
+    console.log("Upcoming bookings:", upcomingBookings);
+
+    // Update DOM
+    totalBookingsEl.innerText = allBookings.length;
+    totalBookingListEl.innerHTML = allBookings.length
+      ? allBookings.map(b => `<li>Booking ID: #${b.id} - ${b.date} [${b.time || "N/A"}]</li>`).join("")
+      : "<li>No bookings yet</li>";
+
+    upcomingBookingsEl.innerText = upcomingBookings.length;
+    upcomingBookingListEl.innerHTML = upcomingBookings.length
+      ? upcomingBookings.map(b => `<li>Booking ID: #${b.id} - ${b.date} [${b.time || "N/A"}]</li>`).join("")
+      : "<li>No upcoming bookings</li>";
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Destination Details</title>
+  <link rel="stylesheet" href="styles/destination-details.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="passenger.html">Dashboard</a></li>
+      <li><a href="passenger-booking-details.html">My Booking</a></li>
+      <li><a href="passenger-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Blue wrapper (Booking Info) -->
+  <div class="form-wrapper">
+    <h2>Available Seats: <span id="availableSeats">-</span></h2>
+    <div class="booking-details">
+      <div class="booking-details-left">
+        <p><span class="label">Destination</span> <span class="value">: <span id="rideDestination">-</span></span></p>
+        <p><span class="label">Date</span> <span class="value">: <span id="rideDate">-</span></span></p>
+        <p><span class="label">Time</span> <span class="value">: <span id="rideTime">-</span></span></p>
+        <p><span class="label">Assembly Place</span> <span class="value">: <span id="rideAssembly">-</span></span></p>
+      </div>
+
+      <div class="booking-details-right">
+        <p><span class="label">ETA</span> <span class="value">: <span id="rideETA">-</span></span></p>
+        <p><span class="label">Mood</span> <span class="value">: <span id="rideMood">-</span></span></p>
+        <p><span class="label">Gender</span> <span class="value">: <span id="rideGender">-</span></span></p>
+        <p><span class="label">Car Details</span> <span class="value">: <span id="rideCar">-</span></span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit button -->
+  <div class="form-actions">
+    <button id="bookRideBtn" type="button">Book</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+      authDomain: "mmu---buddyride.firebaseapp.com",
+      projectId: "mmu---buddyride",
+      storageBucket: "mmu---buddyride.firebasestorage.app",
+      messagingSenderId: "658653638951",
+      appId: "1:658653638951:web:d61409e97ff7543e813902",
+      measurementId: "G-LCS2ECBL00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const rideId = params.get("rideId");
+
+    const rideDestination = document.getElementById("rideDestination");
+    const rideDate = document.getElementById("rideDate");
+    const rideTime = document.getElementById("rideTime");
+    const rideAssembly = document.getElementById("rideAssembly");
+    const rideETA = document.getElementById("rideETA");
+    const rideMood = document.getElementById("rideMood");
+    const rideGender = document.getElementById("rideGender");
+    const rideCar = document.getElementById("rideCar");
+    const availableSeats = document.getElementById("availableSeats");
+
+    let rideData = null;
+    let currentUser = null;
+
+    // Track auth state
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user || null;
+    });
+
+    // Load ride details
+    const loadRideDetails = async () => {
+      if (!rideId) return;
+
+      try {
+        const rideDoc = await getDoc(doc(db, "rides", rideId));
+        if (rideDoc.exists()) {
+          rideData = rideDoc.data();
+
+          rideDestination.innerText = rideData.destination || "-";
+          rideDate.innerText = rideData.date || "-";
+          rideTime.innerText = rideData.time || "-";
+          rideAssembly.innerText = rideData.assemblyPlace || "-";
+          rideETA.innerText = rideData.eta || "-";
+          rideMood.innerText = rideData.mood || "-";
+          rideGender.innerText = rideData.preferredGender || "Mixed";
+          rideCar.innerText = rideData.carDetails || "-";
+          availableSeats.innerText = `${rideData.availableSeats || 0}/${rideData.totalSeats || 4}`;
+        } else {
+          alert("Ride not found!");
+        }
+      } catch (err) {
+        console.error("Error loading ride:", err);
+      }
+    };
+
+    loadRideDetails();
+
+    // Handle booking
+    document.getElementById("bookRideBtn").addEventListener("click", async () => {
+      if (!rideData) {
+        alert("Ride data is not loaded yet. Please wait.");
+        return;
+      }
+
+      if (!currentUser) {
+        alert("Please log in first!");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "bookings"), {
+          userId: currentUser.uid,
+          rideId: rideId,
+          destination: rideData.destination || "-",
+          date: rideData.date || "-",
+          time: rideData.time || "-",
+          assemblyPlace: rideData.assemblyPlace || "-",
+          mood: rideData.mood || "-",
+          gender: rideData.preferredGender || "Mixed",
+          carDetails: rideData.carDetails || "-",
+          seatsBooked: 1,
+          eta:  rideData.eta,
+          createdAt: new Date()
+        });
+
+        alert("Booking successful!");
+        window.location.href = "passenger.html";
+      } catch (err) {
+        console.error("Booking error:", err);
+        alert("Booking failed! Check console for details.");
+      }
+    });
+  </script>
+</body>
+</html>

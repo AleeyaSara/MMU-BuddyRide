@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Driver's Profile</title>
+  <link rel="stylesheet" href="styles/driver-profile.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getFirestore, doc, getDoc, setDoc, 
+      collection, getDocs, deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+      authDomain: "mmu---buddyride.firebaseapp.com",
+      projectId: "mmu---buddyride",
+      storageBucket: "mmu---buddyride.firebasestorage.app",
+      messagingSenderId: "658653638951",
+      appId: "1:658653638951:web:d61409e97ff7543e813902",
+      measurementId: "G-LCS2ECBL00"
+    };
+
+    // Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Example: use studentId as document ID
+    const studentId = "252UC253LB";
+    const profileRef = doc(db, "drivers", studentId);
+    const carsRef = collection(profileRef, "cars");
+
+    // Load profile
+    async function loadProfile() {
+      const snap = await getDoc(profileRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById("name").value = data.name || "";
+        document.getElementById("studentId").value = data.studentId || "";
+        document.getElementById("phone").value = data.phone || "";
+        document.getElementById("license").value = data.license || "";
+        document.getElementById("rules").value = data.rules || "";
+      }
+    }
+
+    // Update profile
+    async function updateProfile() {
+      await setDoc(profileRef, {
+        name: document.getElementById("name").value,
+        studentId: document.getElementById("studentId").value,
+        phone: document.getElementById("phone").value,
+        license: document.getElementById("license").value,
+        rules: document.getElementById("rules").value
+      });
+      alert("Profile updated!");
+    }
+
+    // Delete a car
+    async function deleteCar(carId) {
+      if (confirm("Are you sure you want to delete this car?")) {
+        await deleteDoc(doc(carsRef, carId));
+        loadCars(); // reload table
+      }
+    }
+
+    // Load car details dynamically
+    async function loadCars() {
+      const tbody = document.getElementById("carTableBody");
+      tbody.innerHTML = ""; // clear table first
+      const querySnapshot = await getDocs(carsRef);
+      let counter = 1;
+      querySnapshot.forEach((docSnap) => {
+        const car = docSnap.data();
+        const carId = docSnap.id;
+        const row = `
+          <tr>
+            <td>${counter++}</td>
+            <td>${car.brand || ""}</td>
+            <td>${car.model || ""}</td>
+            <td>${car.color || ""}</td>
+            <td>${car.plateNo || ""}</td>
+            <td>${car.seater || ""}</td>
+            <td><button onclick="deleteCar('${carId}')">Delete</button></td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML("beforeend", row);
+      });
+    }
+
+    // Expose deleteCar to global scope
+    window.deleteCar = deleteCar;
+
+    // Run on page load
+    window.onload = () => {
+      loadProfile();
+      loadCars();
+      document.querySelector(".update-btn").addEventListener("click", updateProfile);
+    };
+  </script>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="driver.html">Dashboard</a></li>
+      <li><a href="driver-booking-details.html">Booking Details</a></li>
+      <li><a href="driver-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Profile Wrapper -->
+  <div class="form-wrapper">
+    <h2>Profile</h2>
+    <div class="profile-driver">
+      <div class="profile-driver-left">
+        <p>
+          <label class="label">Name</label>
+          <input type="text" class="value" id="name">
+        </p>
+        <p>
+          <label class="label">Student ID</label>
+          <input type="text" class="value" id="studentId">
+        </p>
+        <p>
+          <label class="label">Phone No</label>
+          <input type="text" class="value" id="phone">
+        </p>
+        <p>
+          <label class="label">License</label>
+          <input type="text" class="value" id="license">
+        </p>
+      </div>
+
+      <div class="profile-driver-right">
+        <p>
+          <label class="label">Rules</label>
+          <textarea id="rules" name="rules" maxlength="1000" placeholder="Enter rules where applicable..."></textarea>
+        </p>
+      </div>
+      
+      <!-- Single button -->
+      <div class="profile-actions">
+        <button type="button" class="update-btn">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="add-car">
+    <a href="car-details.html" class="car-btn">+ ADD A CAR</a>
+  </div>
+
+  <!-- Car Table (Dynamic from Firestore) -->
+  <div class="car-wrapper">
+    <h2>Car Details</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Brand</th>
+          <th>Model</th>
+          <th>Color</th>
+          <th>Plate No</th>
+          <th>Seaters</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="carTableBody">
+        <!-- Populated dynamically -->
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

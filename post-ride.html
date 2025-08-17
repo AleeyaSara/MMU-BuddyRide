@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Post A Ride Form</title>
+  <link rel="stylesheet" href="styles/post-ride.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="driver.html">Dashboard</a></li>
+      <li><a href="driver-booking-details.html">Booking Details</a></li>
+      <li><a href="driver-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+<!-- Red wrapper -->
+<div class="form-wrapper">
+  <form>
+    <!-- Top Row: 3 fields -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="destination">Destination</label>
+        <input type="text" id="destination" name="destination">
+      </div>
+      <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date">
+      </div>
+      <div class="form-group">
+        <label for="time">Time</label>
+        <input type="text" id="time" name="time">
+      </div>
+    </div>
+
+    <!-- Middle Row: 2 fields -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="assembly">Assembly Place</label>
+        <input type="text" id="assembly" name="assembly">
+      </div>
+      <div class="form-group">
+        <label for="eta">ETA</label>
+        <input type="text" id="eta" name="eta">
+      </div>
+      <div class="form-group">
+        <label for="gender">Preferred Gender</label>
+        <select id="gender" name="gender">
+          <option>All Males</option>
+          <option>All Females</option>
+          <option>Mixed</option>
+        </select>
+      </div>
+    </div>
+      
+    <!-- Bottom Row: 3 fields -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="mood">Mood</label>
+        <select id="mood" name="mood">
+          <option>Chatter</option>
+          <option>Quiet</option>
+          <option>Energetic</option>
+          <option>Relaxed</option>
+          <option>Focused</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="car">Choose Your Car</label>
+        <input type="text" id="car" name="car">
+      </div>
+      <div class="form-group">
+        <label for="seats">Available Seats</label>
+        <input type="text" id="seats" name="seats">
+      </div>
+    </div>
+
+    <!-- Submit button -->
+    <div class="form-actions">
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+    authDomain: "mmu---buddyride.firebaseapp.com",
+    projectId: "mmu---buddyride",
+    storageBucket: "mmu---buddyride.firebasestorage.app",
+    messagingSenderId: "658653638951",
+    appId: "1:658653638951:web:d61409e97ff7543e813902",
+    measurementId: "G-LCS2ECBL00"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const form = document.querySelector('form');
+  const seatsInput = document.getElementById('seats');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Get logged-in driver
+    const user = auth.currentUser;
+    if (!user) {
+      alert("You must be logged in to post a ride!");
+      return;
+    }
+
+    // Collect all form values
+    const rideData = {
+      driverId: user.uid, // 👈 save driver UID
+      destination: document.getElementById('destination').value.trim(),
+      date: document.getElementById('date').value,
+      time: document.getElementById('time').value.trim(),
+      assemblyPlace: document.getElementById('assembly').value.trim(),
+      eta: document.getElementById('eta').value.trim(),
+      preferredGender: document.getElementById('gender').value,
+      mood: document.getElementById('mood').value,
+      car: document.getElementById('car').value,
+      availableSeats: Number(seatsInput.value),
+      passengers: [], // 👈 ready for passenger bookings
+      createdAt: new Date()
+    };
+
+    // Check if any required field is empty
+    for (const key in rideData) {
+      if (rideData[key] === "" || rideData[key] === null || rideData[key] === undefined) {
+        alert(`Please fill in the ${key} field!`);
+        return;
+      }
+    }
+
+    try {
+      // Add ride to Firestore
+      const docRef = await addDoc(collection(db, "rides"), rideData);
+
+      // Redirect to driver booking details with rideId
+      window.location.href = `driver-booking-details.html?rideId=${docRef.id}`;
+    } catch (err) {
+      console.error("Error posting ride:", err);
+      alert("Failed to post ride.");
+    }
+  });
+</script>
+

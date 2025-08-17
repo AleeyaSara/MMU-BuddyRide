@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MMU - BuddyRide</title>
+  <link rel="stylesheet" href="styles/login.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-box">
+      <div class="logo-mmu">
+          <img src="images/logo.png" alt="MMU Logo" class="logo" />
+      </div>
+
+      <div class="login-form">
+        <h1>Email:</h1>
+        <input id="userEmail" type="email" placeholder="Enter your MMU email" required />
+
+        <div class="password-wrapper">
+          <h1>Password:</h1>
+          <input id="userPass" type="password" placeholder="Enter your password" required />
+          <img id="togglePassword" class="toggle-password" src="images/show.png" alt="Show Password" />
+        </div>
+
+        <p id="message" class="version"></p>
+
+        <button class="btn login" type="button" id="loginBtn">Login</button>
+        <button class="btn exit" type="button" id="exitBtn">Exit</button>
+        <p class="version">Copyright by B-206</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+    authDomain: "mmu---buddyride.firebaseapp.com",
+    projectId: "mmu---buddyride",
+    storageBucket: "mmu---buddyride.firebasestorage.app",
+    messagingSenderId: "658653638951",
+    appId: "1:658653638951:web:d61409e97ff7543e813902",
+    measurementId: "G-LCS2ECBL00"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Elements
+  const emailField = document.getElementById('userEmail');
+  const passwordField = document.getElementById('userPass');
+  const message = document.getElementById('message');
+  const toggleIcon = document.getElementById('togglePassword');
+
+  // Toggle password visibility
+  toggleIcon.addEventListener('click', () => {
+    if (passwordField.type === "password") {
+      passwordField.type = "text";
+      toggleIcon.src = "images/hide.png";
+      toggleIcon.alt = "Hide Password";
+    } else {
+      passwordField.type = "password";
+      toggleIcon.src = "images/show.png";
+      toggleIcon.alt = "Show Password";
+    }
+  });
+
+  // Exit button
+  document.getElementById('exitBtn').addEventListener('click', () => {
+    window.location.href = 'about:blank'; // fallback
+  });
+
+  // Login function
+  const login = async () => {
+    const email = emailField.value.trim();
+    const password = passwordField.value.trim();
+
+    if (!email || !password) {
+      message.style.color = 'red';
+      message.innerText = 'Please enter Email and Password.';
+      return;
+    }
+
+    try {
+      console.log("Attempting login:", email);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Login success:", userCredential.user.uid);
+
+      // Fetch user role
+      const userDocRef = doc(db, "users", userCredential.user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        message.style.color = 'red';
+        message.innerText = 'User data not found.';
+        console.warn("Firestore document not found for UID:", userCredential.user.uid);
+        return;
+      }
+
+      const role = userDoc.data().role;
+      console.log("User role:", role);
+      localStorage.setItem('userRole', role);
+
+      message.style.color = 'green';
+      message.innerText = 'Login successful! Redirecting...';
+
+      // Redirect based on role
+      switch (role) {
+        case 'driver':
+          window.location.href = 'driver.html';
+          break;
+        case 'passenger':
+          window.location.href = 'passenger.html';
+          break;
+        default:
+          window.location.href = 'roles.html';
+      }
+
+    } catch (error) {
+      console.error("Login error:", error);
+      message.style.color = 'red';
+      switch (error.code) {
+        case 'auth/user-not-found':
+          message.innerText = 'No user found with this email.';
+          break;
+        case 'auth/wrong-password':
+          message.innerText = 'Incorrect password.';
+          break;
+        case 'auth/invalid-email':
+          message.innerText = 'Invalid email format.';
+          break;
+        default:
+          message.innerText = 'Login failed. Please try again.';
+      }
+    }
+  };
+
+  // Event listeners
+  document.getElementById('loginBtn').addEventListener('click', login);
+  passwordField.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') login();
+  });
+
+  console.log("Login module loaded");
+</script>
+
+</body>
+</html>

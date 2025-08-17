@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register Your Car Form</title>
+  <link rel="stylesheet" href="styles/car-details.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+      authDomain: "mmu---buddyride.firebaseapp.com",
+      projectId: "mmu---buddyride",
+      storageBucket: "mmu---buddyride.firebasestorage.app",
+      messagingSenderId: "658653638951",
+      appId: "1:658653638951:web:d61409e97ff7543e813902",
+      measurementId: "G-LCS2ECBL00"
+    };
+
+    // Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Example: using StudentID as doc ID (same as profile page)
+    const studentId = "252UC253LB"; 
+    const carsRef = collection(doc(db, "drivers", studentId), "cars");
+
+    // Handle form submission
+    window.onload = () => {
+      const form = document.getElementById("carForm");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const brand = document.getElementById("brand").value;
+        const plateNo = document.getElementById("plateNo").value;
+        const model = document.getElementById("model").value;
+        const seater = document.getElementById("seater").value;
+        const color = document.getElementById("color").value;
+
+        try {
+          await addDoc(carsRef, {
+            brand,
+            plateNo,
+            model,
+            seater,
+            color
+          });
+          alert("Car registered successfully!");
+          form.reset();
+        } catch (err) {
+          console.error("Error adding car: ", err);
+          alert("Error saving car details.");
+        }
+      });
+    };
+  </script>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="driver.html">Dashboard</a></li>
+      <li><a href="driver-booking-details.html">Booking Details</a></li>
+      <li><a href="driver-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Red wrapper -->
+  <div class="form-wrapper">
+    <form id="carForm">
+      <!-- Top Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="brand">Brand</label>
+          <input type="text" id="brand" name="brand" required>
+        </div>
+        <div class="form-group">
+          <label for="plateNo">Plate No</label>
+          <input type="text" id="plateNo" name="plateNo" required>
+        </div>
+      </div>
+
+      <!-- Middle Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="model">Model</label>
+          <input type="text" id="model" name="model" required>
+        </div>
+        <div class="form-group">
+          <label for="seater">Available Seat</label>
+          <input type="number" id="seater" name="seater" min="1" required>
+        </div>
+      </div>
+        
+      <!-- Bottom Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="color">Color</label>
+          <input type="text" id="color" name="color" required>
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <div class="form-actions">
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

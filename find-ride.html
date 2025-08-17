@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Find A Ride To Your Destination</title>
+  <link rel="stylesheet" href="styles/find-ride.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="passenger.html">Dashboard</a></li>
+      <li><a href="passenger-booking-details.html">My Booking</a></li>
+      <li><a href="passenger-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="dashboard-title">
+    <h1>Available Rides:</h1>
+  </div>
+
+  <!-- Blue wrapper -->
+<div class="stats-wrapper">
+  <!-- Search Bar -->
+  <div class="search-container">
+    <input type="text" placeholder="Search your destination..." class="search-input">
+    <button class="search-btn">
+      🔍
+    </button>
+  </div>
+
+  <!-- Gender Filter -->
+  <div class="filter">
+    <label for="preferredGender">Preferred Gender:</label>
+    <select id="preferredGender" name="preferredGender">
+      <option value="all">None</option>
+      <option value="male">All Male</option>
+      <option value="female">All Female</option>
+      <option value="mixed">Mixed</option>
+    </select>
+
+  <label for="mood">What's your mood for today?:</label>
+      <select id="mood" name="mood">
+      <option value="all">All</option>
+      <option>Chatter</option>
+      <option>Quiet</option>
+      <option>Energetic</option>
+      <option>Relaxed</option>
+      <option>Focused</option>
+  </select>
+
+</div>
+</div>
+
+<!-- Mock Ride List -->
+<div class="ride-list">
+  <!-- Header Row -->
+  <div class="ride-list-header">
+    <span class="no">No.</span>
+    <span class="destination">Destination</span>
+    <span class="gender">Gender</span>
+    <span class="mood">Mood</span>
+    <span class="action">Action</span>
+  </div>
+
+  <!-- Sample Rows -->
+  <div class="ride-row">
+    <span class="no">1</span>
+    <span class="destination">
+      Kuala Lumpur<br>
+      <span class="datetime">16/08/2025 (10:00 AM)</span>
+    </span>
+    <div class="gender">Mixed</div>
+    <div class="mood">Chatter</div>
+    <span class="action">
+      <a href="destination-details.html" class="book-btn">Book Now</a>
+    </span>
+  </div>
+
+  <div class="ride-row">
+    <span class="no">2</span>
+    <span class="destination">
+      Penang<br>
+      <span class="datetime">17/08/2025 (08:30 AM)</span>
+    </span>
+    <div class="gender">All Male</div>
+    <div class="mood">Quiet</div>
+    <span class="action">
+      <span class="action">
+      <a href="destination-details.html" class="book-btn">Book Now</a>
+    </span>
+  </div>
+
+  <div class="ride-row">
+    <span class="no">3</span>
+    <span class="destination">
+      Kuala Lumpur<br>
+      <span class="datetime">16/08/2025 (10:00 AM)</span>
+    </span>
+    <div class="gender">Mixed</div>
+    <div class="mood">Chatter</div>
+    <span class="action">
+      <a href="destination-details.html" class="book-btn">Book Now</a>
+    </span>
+  </div>
+
+  <div class="ride-row">
+    <span class="no">4</span>
+    <span class="destination">
+      Johor Bahru<br>
+      <span class="datetime">18/08/2025 (09:00 AM)</span>
+    </span>
+    <div class="gender">All Females</div>
+    <div class="mood">Focused</div>
+    <span class="action">
+      <span class="action">
+      <a href="destination-details.html" class="book-btn">Book Now</a>
+    </span>
+  </div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+  authDomain: "mmu---buddyride.firebaseapp.com",
+  projectId: "mmu---buddyride",
+  storageBucket: "mmu---buddyride.firebasestorage.app",
+  messagingSenderId: "658653638951",
+  appId: "1:658653638951:web:d61409e97ff7543e813902",
+  measurementId: "G-LCS2ECBL00"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const rideList = document.querySelector(".ride-list");
+const searchInput = document.querySelector(".search-input");
+const genderFilter = document.getElementById("preferredGender");
+const moodFilter = document.getElementById("mood");
+
+let allRides = []; // store all rides once fetched
+
+const loadRides = async () => {
+  try {
+    const ridesCol = collection(db, "rides");
+    const ridesSnapshot = await getDocs(ridesCol);
+    allRides = ridesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    displayRides(allRides);
+  } catch (error) {
+    console.error("Error loading rides:", error);
+  }
+};
+
+const displayRides = (rides) => {
+  // Clear existing rows (except header)
+  rideList.querySelectorAll(".ride-row").forEach(row => row.remove());
+
+  if (rides.length === 0) {
+    rideList.innerHTML += `<div class="ride-row"><span colspan="5">No rides found.</span></div>`;
+    return;
+  }
+
+  rides.forEach((ride, index) => {
+    const rideRow = document.createElement("div");
+    rideRow.className = "ride-row";
+
+    rideRow.innerHTML = `
+      <span class="no">${index + 1}</span>
+      <span class="destination">
+        ${ride.destination}<br>
+        <span class="datetime">${ride.date} (${ride.time})</span>
+      </span>
+      <div class="gender">${ride.preferredGender || "Mixed"}</div>
+      <div class="mood">${ride.mood || "-"}</div>
+      <span class="action">
+        <a href="destination-details.html?rideId=${ride.id}" class="book-btn">Book Now</a>
+      </span>
+    `;
+
+    rideList.appendChild(rideRow);
+  });
+};
+const filterRides = () => {
+  const searchText = searchInput.value.toLowerCase();
+  const gender = genderFilter.value.toLowerCase(); // "male", "female", "mixed", "all"
+  const mood = moodFilter.value.toLowerCase();
+
+  const filtered = allRides.filter(ride => {
+    const rideGender = (ride.preferredGender || "mixed").toLowerCase();
+    const rideDest = (ride.destination || "").toLowerCase();
+    const rideMood = (ride.mood || "").toLowerCase();
+
+    const matchesDestination = rideDest.includes(searchText);
+
+    let matchesGender = true;
+    if (gender === "All Males") matchesGender = rideGender === "All Males";
+    else if (gender === "All Females") matchesGender = rideGender === "All Females";
+    else if (gender === "mixed") matchesGender = rideGender === "mixed";
+    // "all" keeps matchesGender true
+
+    const matchesMood = mood === "all" || rideMood === mood;
+
+    return matchesDestination && matchesGender && matchesMood;
+  });
+
+  displayRides(filtered);
+};
+
+
+
+
+// Add event listeners
+searchInput.addEventListener("input", filterRides);
+genderFilter.addEventListener("change", filterRides);
+moodFilter.addEventListener("change", filterRides);
+
+// Initial load
+loadRides();
+</script>
+
+
+</body>
+</html>

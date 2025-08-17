@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Homepage - Driver</title>
+  <link rel="stylesheet" href="styles/driver.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCa80A6_P03Y9AUROVtF-fJ18kWxvD663M",
+    authDomain: "mmu---buddyride.firebaseapp.com",
+    projectId: "mmu---buddyride",
+    storageBucket: "mmu---buddyride.firebasestorage.app",
+    messagingSenderId: "658653638951",
+    appId: "1:658653638951:web:d61409e97ff7543e813902",
+    measurementId: "G-LCS2ECBL00"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("Logged in user UID:", user.uid);
+
+      // ❌ previously filtered by driverId
+      // const q = query(ridesRef, where("driverId", "==", user.uid));
+
+      // ✅ now fetch ALL rides
+      const ridesRef = collection(db, "rides");
+      const querySnapshot = await getDocs(ridesRef);
+
+      // show total rides count
+      document.getElementById("totalRidesBox").textContent = querySnapshot.size;
+
+      const ridesList = document.getElementById("ridesList");
+      ridesList.innerHTML = "";
+
+      if (querySnapshot.empty) {
+        ridesList.innerHTML = "<li>No rides found</li>";
+      } else {
+        querySnapshot.forEach((doc) => {
+          const ride = doc.data();
+          const li = document.createElement("li");
+          li.textContent = `Booking ID: ${doc.id} - ${ride.date} [${ride.time}]`;
+          ridesList.appendChild(li);
+        });
+      }
+    } else {
+      document.getElementById("totalRidesBox").textContent = "0";
+      document.getElementById("ridesList").innerHTML = "<li>Please log in</li>";
+    }
+  });
+</script>
+
+
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <img src="images/logo.png" alt="Company Logo" class="logo" />
+    <ul class="nav-links">
+      <li><a href="driver.html">Dashboard</a></li>
+      <li><a href="driver-booking-details.html">Booking Details</a></li>
+      <li><a href="driver-profile.html">Profile</a></li>
+      <li><a href="index.html">Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="new-ride">
+    <a href="post-ride.html" class="ride-btn">+ POST A RIDE</a>
+  </div>
+
+  <div class="dashboard-title">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Blue wrapper -->
+  <div class="stats-wrapper">
+    <!-- Total Rides -->
+    <div class="stat-item">
+      <span>Total Rides:</span>
+      <div class="stat-box" id="totalRidesBox">0</div>
+      <div class="stat-list">
+        <ul id="ridesList">
+          <li>Loading...</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Upcoming Rides (Still Hardcoded) -->
+    <div class="stat-item">
+      <span>Upcoming Rides:</span>
+      <div class="stat-box">3</div>
+      <div class="stat-list">
+        <ul>
+          <li>Booking ID: #2011 - 22/08/2025 [09:00 AM]</li>
+          <li>Booking ID: #2012 - 22/08/2025 [01:30 PM]</li>
+          <li>Booking ID: #2013 - 23/08/2025 [07:45 PM]</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
